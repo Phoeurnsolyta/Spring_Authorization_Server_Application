@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@Component
 public class JpaRegisteredClientRepository implements RegisteredClientRepository {
 
     private final authorization.server.example.repository.ClientRepository clientRepository;
