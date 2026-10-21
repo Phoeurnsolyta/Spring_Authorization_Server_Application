@@ -1,3 +1,38 @@
 spring:
   application:
-    name: authorization
+    name: authorization-server
+  security:
+    oauth2:
+      authorizationserver:
+        client:
+          public-client:
+            registration:
+              client-id: "public-client"
+              client-authentication-methods:
+                - "none"
+              authorization-grant-types:
+                - "authorization_code"
+              redirect-uris:
+                - "http://127.0.0.1:4200"
+              scopes:
+                - "openid"
+                - "profile"
+            require-authorization-consent: true
+            require-proof-key: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_db
+    username: postgres
+    password: lyta12345
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 9000
