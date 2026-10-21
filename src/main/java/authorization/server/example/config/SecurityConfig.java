@@ -20,6 +20,7 @@ import org.springframework.security.config.annotation.web.configuration.OAuth2Au
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -48,6 +49,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -153,14 +155,26 @@ public class SecurityConfig {
     }
 
     @Bean
+    public UserDetailsService users() {
+        UserDetails user = User.withDefaultPasswordEncoder()
+                .username("user1")
+                .password("password")
+                .roles("user", "admin")
+                .build();
+        return new InMemoryUserDetailsManager(user);
+    }
+
+    @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer() {
         return (context) -> {
             if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
-                Authentication principal = context.getPrincipal();
-                Set<String> authorities = principal.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toSet());
-                context.getClaims().claim("roles", authorities);
+                context.getClaims().claims((claims) -> {
+                    Set<String> roles = AuthorityUtils.authorityListToSet(context.getPrincipal().getAuthorities())
+                            .stream()
+                            .map(c -> c.replaceFirst("^ROLE_", ""))
+                            .collect(Collectors.collectingAndThen(Collectors.toSet(), Collections::unmodifiableSet));
+                    claims.put("roles", roles);
+                });
             }
         };
     }
